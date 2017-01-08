@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="//cdn.jsdelivr.net/phaser/2.5.0/phaser.min.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+
+        //  Note that this html file is set to pull down Phaser 2.5.0 from the JS Delivr CDN.
+        //  Although it will work fine with this tutorial, it's almost certainly not the most current version.
+        //  Be sure to replace it with an updated version before you start experimenting with adding your own code.
+
+        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update , render: render});
+
+        var paddle1, paddle2, ball;
+        var score1 = 0; var score2 = 0;
+
+        var fontStyle =  { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+        var score1Text, score2Text;
+
+        var ballSpeed =  {x: 5, y: 5};
+        var ballOrig;
+        function preload () {
+
+            game.load.image('dot', 'dot.png');
+
+        }
+
+        function create () {
+          score1Text = game.add.text(game.world.centerX - 50, 50, score1, fontStyle);
+          score2Text = game.add.text(game.world.centerX + 50, 50, score2, fontStyle);
+
+
+           ballOrig = {x: game.world.centerX, y: game.world.centerY };
+          game.physics.startSystem(Phaser.Physics.ARCADE);
+
+          paddle1 = createPaddle(20, game.world.centerY);
+          paddle2 = createPaddle(game.world.width - 20, game.world.centerY);
+
+          var separator = game.add.sprite(game.world.centerX, 0, 'dot');
+          separator.height = 600;
+          separator.width = 10;
+
+          ball = game.add.sprite(ballOrig.x, ballOrig.y, 'dot');
+          ball.anchor.setTo(0.5, 0.5);
+          game.physics.arcade.enable(ball, Phaser.Physics.ARCADE);
+        //  ball.body.collideWorldBounds = true;
+
+
+        }
+
+        function update() {
+            ai();
+            game.physics.arcade.collide(ball, paddle1, paddleCollision, null, this);
+            game.physics.arcade.collide(ball, paddle2, paddleCollision, null, this);
+
+            controlPaddle(paddle1 , game.input.y);
+
+            moveBall();
+            outOfBounds();
+        }
+
+        function render() {
+
+      	   //game.debug.bodyInfo(ball, 16, 24);
+
+      }
+
+      function paddleCollision(obj1, obj2) {
+        ballSpeed.x = -ballSpeed.x;
+        ball.x = ball.x + 30 - Math.abs(obj2.x - obj1.x); //Fix vertical collision
+      }
+
+        function createPaddle(x,y){
+          var paddle = game.add.sprite(x,y, 'dot');
+          paddle.height = 100;
+          paddle.anchor.setTo(0.5, 0.5);
+          game.physics.arcade.enable(paddle, Phaser.Physics.ARCADE);
+          paddle.body.collideWorldBounds = true;
+
+          return paddle;
+        }
+
+        function moveBall(){
+          ball.x += ballSpeed.x;
+          ball.y += ballSpeed.y;
+        }
+
+        function outOfBounds() {
+          //all this logic can ve avoided using colliderWorldBounds,
+          // bounce and velocity properties
+          if (ball.x < 0) {
+              ball.x = ballOrig.x; ball.y = ballOrig.y;
+              ballSpeed.x = -ballSpeed.x;
+              score2++;
+              score2Text.text = score2;
+          }
+          if (ball.x > game.world.width) {
+              ball.x = ballOrig.x; ball.y = ballOrig.y;
+              ballSpeed.x = -ballSpeed.x;
+              score1++;
+              score1Text.text = score1;
+
+          }
+
+          if (ball.y > game.world.height || ball.y < 0) {
+              ballSpeed.y = -ballSpeed.y;
+          }
+
+        }
+        function ai(){
+          paddle2.y = ball.y;
+        }
+        function controlPaddle(paddle, y ){
+          paddle.y = y;
+        }
+    };
+
+    </script>
+
+    </body>
+</html>
